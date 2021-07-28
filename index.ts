@@ -4,7 +4,7 @@
  * 2) a primitive.
  * TODO: add support for arrays of Obj.
  *
- * We will use obj as the basic data structure that we can 
+ * We will use obj as the basic data structure that we can
  * get patches from and apply patches to.
  *
  * For simplicity we don't allow undefined as a value in the data structure.
@@ -13,14 +13,14 @@
  * that it cannot come from actually set values.
  */
 export type Primitive = string | number | boolean | null;
-export type Hash = {[key: string]: Obj};
+export type Hash = { [key: string]: Obj };
 export type Obj = Hash | Primitive;
 
 export function isPrimitive(obj?: Obj): obj is Primitive {
-  return obj !== undefined && typeof obj !== 'object';
+  return obj !== undefined && typeof obj !== "object";
 }
 
-export function isHash(obj?: Obj): obj is {[key: string]: Obj} {
+export function isHash(obj?: Obj): obj is { [key: string]: Obj } {
   return obj !== undefined && !isPrimitive(obj);
 }
 
@@ -58,12 +58,17 @@ export function isEqual(obj1: Obj, obj2: Obj): boolean {
  * Note: that is different from {type: 'noop'}
  * as apply({}, 0) is {}, while apply({type: 'noop'}, 0) is 0.
  */
-export type PrimitivePatch = {type: 'add', value: Primitive} | {type: 'remove'} | {type: 'noop'};
-export type HashPatch = {[key: string]: Patch};
+export type PrimitivePatch =
+  | { type: "add"; value: Primitive }
+  | { type: "remove" }
+  | { type: "noop" };
+export type HashPatch = { [key: string]: Patch };
 export type Patch = PrimitivePatch | HashPatch;
 
 export function isPrimitivePatch(p: Patch): p is PrimitivePatch {
-  return p.type && (p.type === 'add' || p.type === 'remove' || p.type === 'noop'); 
+  return (
+    p.type && (p.type === "add" || p.type === "remove" || p.type === "noop")
+  );
 }
 
 export function isHashPatch(p: Patch): p is HashPatch {
@@ -72,19 +77,19 @@ export function isHashPatch(p: Patch): p is HashPatch {
 
 /**
  * Extract a patch given A and B Objs, so that:
- *   applyPatch(getPatch(A, B), A') 
+ *   applyPatch(getPatch(A, B), A')
  *   where A' is an Obj equal to A
  *   returns a new Obj that is structurally equal to B.
  *
  * An empty patch is represented by {}, but it can occur only top-level.
  */
-export function getPatch(from: Obj|undefined, to: Obj): Patch {
+export function getPatch(from: Obj | undefined, to: Obj): Patch {
   if (isPrimitive(to)) {
     if (isHash(from) || to !== from) {
-      return {type:'add', value: to};
+      return { type: "add", value: to };
     }
-    return {type:'noop'};
-  } 
+    return { type: "noop" };
+  }
   // to is a hash from here on.
   let patch: Patch = {};
   for (const k of Object.keys(to)) {
@@ -92,7 +97,7 @@ export function getPatch(from: Obj|undefined, to: Obj): Patch {
     if (isHash(from) && from.hasOwnProperty(k)) {
       innerPatch = getPatch(from[k], to[k]);
       // no need to record {} or noop, because from[k] exists.
-      if (Object.keys(innerPatch).length === 0 || innerPatch.type === 'noop') {
+      if (Object.keys(innerPatch).length === 0 || innerPatch.type === "noop") {
         continue;
       }
     } else {
@@ -105,7 +110,7 @@ export function getPatch(from: Obj|undefined, to: Obj): Patch {
   if (isHash(from)) {
     for (const k of Object.keys(from)) {
       if (!to.hasOwnProperty(k)) {
-        patch[k] = {type: 'remove'};
+        patch[k] = { type: "remove" };
       }
     }
   }
@@ -114,21 +119,25 @@ export function getPatch(from: Obj|undefined, to: Obj): Patch {
 
 // obj is optional as we are traversing we might not have a obj to apply.
 export function applyPatch(patch: Patch, obj?: Obj): Obj {
-  if (isPrimitivePatch(patch) && patch.type === 'noop') {
-    if (obj === undefined) throw new Error('attempting to apply noop patch to missing primitive');
+  if (isPrimitivePatch(patch) && patch.type === "noop") {
+    if (obj === undefined)
+      throw new Error("attempting to apply noop patch to missing primitive");
     return obj;
   }
-  if (isPrimitivePatch(patch) && patch.type === 'add') return patch.value;
-  if (isPrimitivePatch(patch) && patch.type === 'remove') {
-    throw new Error(`recursed into remove patch for obj ${obj}. Should have been taken care upstream`);
+  if (isPrimitivePatch(patch) && patch.type === "add") return patch.value;
+  if (isPrimitivePatch(patch) && patch.type === "remove") {
+    throw new Error(
+      `recursed into remove patch for obj ${obj}. Should have been taken care upstream`
+    );
   }
-  if (isHashPatch(patch) && Object.keys(patch).length === 0) return obj !== undefined && isHash(obj) ? obj : {};
+  if (isHashPatch(patch) && Object.keys(patch).length === 0)
+    return obj !== undefined && isHash(obj) ? obj : {};
 
   // patch must be hash patch below.
   // if obj is hash we keep it otherwise we blast it.
-  const res: Obj = obj && isHash(obj) ? {...obj} : {};
+  const res: Obj = obj && isHash(obj) ? { ...obj } : {};
   for (const k of Object.keys(patch)) {
-    if (isPrimitivePatch(patch[k]) && patch[k].type === 'remove') {
+    if (isPrimitivePatch(patch[k]) && patch[k].type === "remove") {
       delete res[k];
       continue;
     }
