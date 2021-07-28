@@ -1,0 +1,24 @@
+{
+  "name": "patschy",
+  "version": "0.0.1",
+  "description": "Simple TS object patch utility. Does immutable application of patches with substructure sharing.",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "build-watch": "tsc --watch",
+    "test-watch": "jest --watch"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^26.0.24",
+    "jest": "^27.0.6",
+    "typescript": "^4.3.5"
+  },
+  "jest": {
+    "testMatch": [
+      "**/?(*.)+(spec|test).js?(x)"
+    ]
+  }
+}
